@@ -1,4 +1,3 @@
-
 # Example visible test case
 test_input_1 = """
 x = 5
@@ -9,8 +8,6 @@ expected_output_1 = """
 Assignment(('IDENTIFIER', 'x'), ('NUMBER', 5))
 Assignment(('IDENTIFIER', 'y'), BinaryOperation(('IDENTIFIER', 'y'), ('PLUS', '+'), ('IDENTIFIER', 'x')))
 """
-
-
 
 
 test_input_2 = """
@@ -24,7 +21,6 @@ Assignment(('IDENTIFIER', 'x'), ('NUMBER', 1))
 Assignment(('IDENTIFIER', 'y'), ('NUMBER', 2))
 FunctionCall(('IDENTIFIER', 'foo'), [BinaryOperation(('IDENTIFIER', 'x'), ('PLUS', '+'), ('IDENTIFIER', 'y'))])
 """
-
 
 
 test_input_3 = """

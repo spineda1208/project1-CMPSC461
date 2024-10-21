@@ -4,6 +4,7 @@ class ASTNode:
         """Method to provide compact string representation without newlines."""
         return repr(self)
 
+
 # Class for variable assignment: x = expression
 class Assignment(ASTNode):
     def __init__(self, identifier, expression):
@@ -14,8 +15,13 @@ class Assignment(ASTNode):
         return f"Assignment({self.identifier}, {self.expression})"
 
     def to_string(self):
-        expr_str = self.expression.to_string() if isinstance(self.expression, ASTNode) else repr(self.expression)
+        expr_str = (
+            self.expression.to_string()
+            if isinstance(self.expression, ASTNode)
+            else repr(self.expression)
+        )
         return f"Assignment({self.identifier}, {expr_str})"
+
 
 # Class for binary operations: term1 + term2
 class BinaryOperation(ASTNode):
@@ -28,9 +34,16 @@ class BinaryOperation(ASTNode):
         return f"BinaryOperation({self.left}, {self.operator}, {self.right})"
 
     def to_string(self):
-        left_str = self.left.to_string() if isinstance(self.left, ASTNode) else repr(self.left)
-        right_str = self.right.to_string() if isinstance(self.right, ASTNode) else repr(self.right)
+        left_str = (
+            self.left.to_string() if isinstance(self.left, ASTNode) else repr(self.left)
+        )
+        right_str = (
+            self.right.to_string()
+            if isinstance(self.right, ASTNode)
+            else repr(self.right)
+        )
         return f"BinaryOperation({left_str}, {self.operator}, {right_str})"
+
 
 # Class for boolean expressions: x != 10
 class BooleanExpression(ASTNode):
@@ -43,9 +56,16 @@ class BooleanExpression(ASTNode):
         return f"BooleanExpression({self.left}, {self.operator}, {self.right})"
 
     def to_string(self):
-        left_str = self.left.to_string() if isinstance(self.left, ASTNode) else repr(self.left)
-        right_str = self.right.to_string() if isinstance(self.right, ASTNode) else repr(self.right)
+        left_str = (
+            self.left.to_string() if isinstance(self.left, ASTNode) else repr(self.left)
+        )
+        right_str = (
+            self.right.to_string()
+            if isinstance(self.right, ASTNode)
+            else repr(self.right)
+        )
         return f"BooleanExpression({left_str}, {self.operator}, {right_str})"
+
 
 # Class for function calls: foobar(arg1, arg2)
 class FunctionCall(ASTNode):
@@ -58,8 +78,12 @@ class FunctionCall(ASTNode):
         return f"FunctionCall({self.function_name}, [{args_repr}])"
 
     def to_string(self):
-        args_str = ", ".join(arg.to_string() if isinstance(arg, ASTNode) else repr(arg) for arg in self.arguments)
+        args_str = ", ".join(
+            arg.to_string() if isinstance(arg, ASTNode) else repr(arg)
+            for arg in self.arguments
+        )
         return f"FunctionCall({self.function_name}, [{args_str}])"
+
 
 # Class for if statements
 class IfStatement(ASTNode):
@@ -73,10 +97,21 @@ class IfStatement(ASTNode):
         return f"IfStatement({self.condition}, {self.then_block}, {else_repr})"
 
     def to_string(self):
-        condition_str = self.condition.to_string() if isinstance(self.condition, ASTNode) else repr(self.condition)
-        then_str = self.then_block.to_string() if isinstance(self.then_block, ASTNode) else repr(self.then_block)
-        else_str = self.else_block.to_string() if self.else_block is not None else "None"
+        condition_str = (
+            self.condition.to_string()
+            if isinstance(self.condition, ASTNode)
+            else repr(self.condition)
+        )
+        then_str = (
+            self.then_block.to_string()
+            if isinstance(self.then_block, ASTNode)
+            else repr(self.then_block)
+        )
+        else_str = (
+            self.else_block.to_string() if self.else_block is not None else "None"
+        )
         return f"IfStatement({condition_str}, {then_str}, {else_str})"
+
 
 # Class for while statements
 class WhileStatement(ASTNode):
@@ -88,9 +123,18 @@ class WhileStatement(ASTNode):
         return f"WhileStatement({self.condition}, {self.block})"
 
     def to_string(self):
-        condition_str = self.condition.to_string() if isinstance(self.condition, ASTNode) else repr(self.condition)
-        block_str = self.block.to_string() if isinstance(self.block, ASTNode) else repr(self.block)
+        condition_str = (
+            self.condition.to_string()
+            if isinstance(self.condition, ASTNode)
+            else repr(self.condition)
+        )
+        block_str = (
+            self.block.to_string()
+            if isinstance(self.block, ASTNode)
+            else repr(self.block)
+        )
         return f"WhileStatement({condition_str}, {block_str})"
+
 
 # Class for blocks
 class Block(ASTNode):
@@ -102,5 +146,8 @@ class Block(ASTNode):
         return f"Block(\n  {statement_reprs}\n)"
 
     def to_string(self):
-        statement_strs = ", ".join(stmt.to_string() if isinstance(stmt, ASTNode) else repr(stmt) for stmt in self.statements)
+        statement_strs = ", ".join(
+            stmt.to_string() if isinstance(stmt, ASTNode) else repr(stmt)
+            for stmt in self.statements
+        )
         return f"Block([{statement_strs}])"
