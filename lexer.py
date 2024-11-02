@@ -1,11 +1,11 @@
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 
 class Lexer:
     def __init__(self, code: str):
         self.source_code: str = code
         self.position: int = 0
-        self.tokens: List[Tuple[str, str]] = []
+        self.tokens: List[Tuple[str, Union[str, int]]] = []
 
     def _get_token(self, string: str):
         match string:
@@ -39,6 +39,8 @@ class Lexer:
                 return ("SEMICOLON", string)
             case "=":
                 return ("ASSIGNMENT", string)
+            case ",":
+                return ("ARG_SEPARATOR", string)
             case _:
                 return ("IDENTIFIER", string)
 
@@ -47,12 +49,14 @@ class Lexer:
         while position < len(self.source_code) and self.source_code[position].isdigit():
             number += self.source_code[position]
             position += 1
-        self.tokens.append(("NUMBER", number))
+        self.tokens.append(("NUMBER", int(number)))
         return position
 
     def _get_identifier(self, position: int) -> int:
         buffer = ""
-        while position < len(self.source_code) and self.source_code[position].isalpha():
+        while position < len(self.source_code) and (
+            self.source_code[position].isalnum() or self.source_code[position] == "_"
+        ):
             buffer += self.source_code[position]
             position += 1
         token = self._get_token(buffer)
@@ -76,8 +80,20 @@ class Lexer:
                 position = self._get_identifier(position)
                 continue
 
+            if character in "=!":
+                buffer = ""
+                while not character.isspace():
+                    buffer += character
+                    position += 1
+                    character = self.source_code[position]
+                token = self._get_token(buffer)
+                self.tokens.append(token)
+                continue
+
             token = self._get_token(character)
             self.tokens.append(token)
             position += 1
+
+        self.tokens.append(("EOF", "EOF"))
 
         return self.tokens

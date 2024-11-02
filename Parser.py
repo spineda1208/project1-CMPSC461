@@ -1,5 +1,10 @@
+import logging
+
 from lexer import Lexer
 import ASTNodeDefs as AST
+
+# logging.disable()
+# logging.getLogger().setLevel(logging.DEBUG)
 
 
 class Parser:
@@ -18,13 +23,6 @@ class Parser:
         Entry point for the parser. It will process the entire program.
         TODO: Implement logic to parse multiple statements and return the AST for the entire program.
         """
-        return self.program()
-
-    def program(self):
-        """
-        Program consists of multiple statements.
-        TODO: Loop through and collect statements until EOF is reached.
-        """
         statements = []
         while self.current_token[0] != "EOF":
             statement = self.statement()
@@ -42,25 +40,27 @@ class Parser:
 
         TODO: Dispatch to the correct parsing function based on the current token.
         """
-        print(f"Current token: {self.current_token}")
-        print(f"Peek value: {self.peek()}")
+        logging.info(f"\nTokens left to process : {len(self.tokens)}")
+        logging.info(f"Current token: {self.current_token}")
+        logging.info(f"Peek value: {self.peek()}")
         if self.current_token[0] == "IDENTIFIER":
             if self.peek() == "ASSIGNMENT":  # Assignment
-                print("Doing assignment")
+                logging.info("Doing assignment")
                 return self.assign_stmt()  # AST of assign_stmt
             elif self.peek() == "LPAREN":  # Function call
-                print("Doing function call")
+                logging.info("Doing function call")
                 return self.function_call()  # AST of function call
             else:
                 raise ValueError(f"Unexpected token after identifier: {self.tokens[1]}")
         elif self.current_token[0] == "IF":
-            print("Doing if statement")
+            logging.info("Doing if statement")
             return self.if_stmt()  # AST of if stmt
         elif self.current_token[0] == "WHILE":
-            print("Doing while loop")
+            logging.info("Doing while loop")
             return self.while_stmt()  # AST of while stmt
+        elif self.current_token[0] == "EOF":
+            return
         else:
-            # TODO: Handle additional statements if necessary.
             raise ValueError(f"Unexpected token: {self.current_token}")
 
     def assign_stmt(self):
@@ -70,7 +70,8 @@ class Parser:
         x = 5 + 3
         TODO: Implement parsing for assignments, where an identifier is followed by "=" and an expression.
         """
-        identifier = self.current_token[1]
+        logging.info("Tokens left pre assignment", len(self.tokens))
+        identifier = self.current_token
         self.advance()
         assert self.current_token[1] == "="
         self.advance()
@@ -78,10 +79,14 @@ class Parser:
         if self.peek() in ["PLUS", "MINUS", "MULTIPLY", "DIVIDE"]:
             expression = self.expression()
         else:
-            expression = None
+            expression = self.current_token
+            self.advance()
 
         node = AST.Assignment(identifier, expression)
-        print(node)
+
+        logging.info("Assignment Node: ", node)
+        logging.info("Tokens left post assignment", len(self.tokens))
+
         return node
 
     def if_stmt(self):
@@ -95,7 +100,27 @@ class Parser:
         TODO: Implement the logic to parse the if condition and blocks of code.
         """
         self.advance()
-        assert self.current_token[0] == "IDENTIFIER"
+        assert (
+            self.current_token[0] == "IDENTIFIER" or self.current_token[0] == "NUMBER"
+        )
+        boolean_expression = self.boolean_expression()
+        logging.info("Boolean Expression:", boolean_expression)
+
+        assert self.current_token[0] == "SEMICOLON"
+        self.advance()
+
+        block = self.block("IF")
+        logging.info("Is there a fucking else statement?", self.current_token)
+        if self.current_token[0] == "ELSE":
+            else_block = self.block()
+        else:
+            else_block = None
+
+        node = AST.IfStatement(
+            condition=boolean_expression, then_block=block, else_block=else_block
+        )
+        logging.info("If Statement Node: ", node)
+        return node
 
     def while_stmt(self):
         """
@@ -105,12 +130,18 @@ class Parser:
             # statements
         TODO: Implement the logic to parse while loops with a condition and a block of statements.
         """
-        condition = None
-        block = None
+        self.advance()
+        assert (
+            self.current_token[0] == "IDENTIFIER" or self.current_token[0] == "NUMBER"
+        )
+        condition = self.boolean_expression()
+        assert self.current_token[0] == "SEMICOLON"
+
+        block = self.block("WHILE")
 
         return AST.WhileStatement(condition, block)
 
-    def block(self):
+    def block(self, block_type: str = ""):
         """
         Parses a block of statements. A block is a collection of statements grouped by indentation.
         Example:
@@ -118,11 +149,28 @@ class Parser:
             # This is a block
             x = 5
             y = 10
-        TODO: Implement logic to capture multiple statements as part of a block.
         """
+        stop = ["IF", "ELSE", "EOF"] if block_type == "IF" else ["EOF"]
+        logging.info("Block Stop:", stop)
+
+        if self.current_token[0] == "ELSE":
+            self.advance()
+            assert self.current_token[0] == "SEMICOLON"
+            self.advance()
+
+        i = 0
         statements = []
-        # write your code here
-        return AST.Block(statements)
+        while self.current_token[0] not in stop:
+            if i > 100:
+                break
+            logging.info(f"Statement {i} in block with peek: {self.peek()}")
+            statement = self.statement()
+            statements.append(statement)
+            i += 1
+        logging.info("Statements in block: ", statements)
+        node = AST.Block(statements)
+        logging.info("Block Statement:", node)
+        return node
 
     def expression(self):
         """
@@ -148,7 +196,24 @@ class Parser:
         TODO: Implement parsing for boolean expressions.
         """
         # write your code here, for reference check expression function
-        return
+        assert self.current_token[0] in ["NUMBER", "IDENTIFIER"]
+        left = self.current_token
+
+        self.advance()
+        assert self.current_token[0] in [
+            "EQUALS",
+            "NEQ",
+            "GREATER",
+            "LESS",
+        ], f"This is the current token {self.current_token}"
+        operator = self.current_token
+
+        self.advance()
+        assert self.current_token[0] in ["NUMBER", "IDENTIFIER"]
+        right = self.current_token
+        self.advance()
+
+        return AST.BooleanExpression(left, operator, right)
 
     def term(self):
         """
@@ -157,8 +222,14 @@ class Parser:
         x * y / z
         TODO: Implement the parsing for multiplication and division.
         """
-        # write your code here, for reference check expression function
-        return
+        left = self.factor()
+        while self.current_token and self.current_token[0] in ["MULTIPLY", "DIVIDE"]:
+            operator = self.current_token
+            self.advance()
+            right = self.factor()
+            left = AST.BinaryOperation(left, operator, right)
+
+        return left
 
     def factor(self):
         """
@@ -169,15 +240,17 @@ class Parser:
         - A parenthesized expression
         TODO: Handle these cases and create appropriate AST nodes.
         """
-        if self.current_token[0] == "NUMBER":
-            # write your code here
-            return
-        elif self.current_token[0] == "IDENTIFIER":
-            # write your code here
-            pass
+        if self.current_token[0] in ["NUMBER", "IDENTIFIER"]:
+            token = self.current_token
+            self.advance()
+            return token
         elif self.current_token[0] == "LPAREN":
-            # write your code here
-            pass
+            logging.debug("We are going through here ")
+            self.advance()
+            expression = self.expression()
+            assert self.current_token[0] != "RPAREN"
+            self.advance()
+            return expression
         else:
             raise ValueError(f"Unexpected token in factor: {self.current_token}")
 
@@ -188,10 +261,28 @@ class Parser:
         myFunction(arg1, arg2)
         TODO: Implement parsing for function calls with arguments.
         """
+        func_name = self.current_token
+        self.advance()
+        assert self.current_token[0] == "LPAREN"
+        assert ("RPAREN", ")") in self.tokens
+        self.advance()
 
-        func_name = None
-        args = None
-        return AST.FunctionCall(func_name, args)
+        args = []
+        while self.current_token[0] != "RPAREN":
+            if self.current_token[0] == "ARG_SEPARATOR":
+                self.advance()
+                continue
+            args.append(self.current_token)
+            self.advance()
+        assert self.current_token[0] == "RPAREN"
+        self.advance()
+
+        logging.info("after arg parse", self.current_token)
+        logging.info("Arguments of function: ", args)
+        node = AST.FunctionCall(func_name, args)
+        logging.info("Function Call Node: ", node)
+        logging.info("Next Token form func Call Node: ", self.peek())
+        return node
 
     def arg_list(self):
         """
