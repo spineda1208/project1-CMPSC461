@@ -4,12 +4,10 @@ from Parser import Parser
 source_code = """
 my_name = 100
 x = 12
-if x > 10:
-    foo(100, 200)
-if x != 10:
-    bar(200)
-else:
-    baz(300)
+while x == 10:
+    foo(x)
+    bar(y)
+    baz(z)
 """
 
 print("Tokenizing inititated:")
