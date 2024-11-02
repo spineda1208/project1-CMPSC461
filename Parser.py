@@ -3,9 +3,6 @@ import logging
 from lexer import Lexer
 import ASTNodeDefs as AST
 
-# logging.disable()
-# logging.getLogger().setLevel(logging.DEBUG)
-
 
 class Parser:
     def __init__(self, tokens):
@@ -13,22 +10,17 @@ class Parser:
         self.current_token = tokens.pop(0)  # Start with the first token
 
     def advance(self):
-        # Move to the next token in the list.
-        # TODO: Ensure the parser doesn"t run out of tokens.
         if len(self.tokens) > 0:
             self.current_token = self.tokens.pop(0)
 
     def parse(self):
         """
         Entry point for the parser. It will process the entire program.
-        TODO: Implement logic to parse multiple statements and return the AST for the entire program.
         """
         statements = []
         while self.current_token[0] != "EOF":
             statement = self.statement()
             statements.append(statement)
-            # TODO: Parse each statement and append it to the list.
-        # TODO: Return an AST node that represents the program.
         return statements
 
     def statement(self):
@@ -37,27 +29,25 @@ class Parser:
         - If it"s an identifier, it could be an assignment or function call.
         - If it"s "if", it parses an if-statement.
         - If it"s "while", it parses a while-statement.
-
-        TODO: Dispatch to the correct parsing function based on the current token.
         """
         logging.info(f"\nTokens left to process : {len(self.tokens)}")
         logging.info(f"Current token: {self.current_token}")
         logging.info(f"Peek value: {self.peek()}")
         if self.current_token[0] == "IDENTIFIER":
-            if self.peek() == "ASSIGNMENT":  # Assignment
+            if self.peek() == "ASSIGNMENT":
                 logging.info("Doing assignment")
-                return self.assign_stmt()  # AST of assign_stmt
-            elif self.peek() == "LPAREN":  # Function call
+                return self.assign_stmt()
+            elif self.peek() == "LPAREN":
                 logging.info("Doing function call")
-                return self.function_call()  # AST of function call
+                return self.function_call()
             else:
                 raise ValueError(f"Unexpected token after identifier: {self.tokens[1]}")
         elif self.current_token[0] == "IF":
             logging.info("Doing if statement")
-            return self.if_stmt()  # AST of if stmt
+            return self.if_stmt()
         elif self.current_token[0] == "WHILE":
             logging.info("Doing while loop")
-            return self.while_stmt()  # AST of while stmt
+            return self.while_stmt()
         elif self.current_token[0] == "EOF":
             return
         else:
@@ -68,7 +58,6 @@ class Parser:
         Parses assignment statements.
         Example:
         x = 5 + 3
-        TODO: Implement parsing for assignments, where an identifier is followed by "=" and an expression.
         """
         logging.info("Tokens left pre assignment", len(self.tokens))
         identifier = self.current_token
@@ -97,7 +86,6 @@ class Parser:
             # statements
         else:
             # statements
-        TODO: Implement the logic to parse the if condition and blocks of code.
         """
         self.advance()
         assert (
@@ -128,7 +116,6 @@ class Parser:
         Example:
         while condition:
             # statements
-        TODO: Implement the logic to parse while loops with a condition and a block of statements.
         """
         self.advance()
         assert (
@@ -136,6 +123,7 @@ class Parser:
         )
         condition = self.boolean_expression()
         assert self.current_token[0] == "SEMICOLON"
+        self.advance()
 
         block = self.block("WHILE")
 
@@ -272,6 +260,10 @@ class Parser:
             if self.current_token[0] == "ARG_SEPARATOR":
                 self.advance()
                 continue
+            if self.peek() in ["PLUS", "MINUS", "MULTIPLY", "DIVIDE"]:
+                expression = self.expression()
+                args.append(expression)
+                continue
             args.append(self.current_token)
             self.advance()
         assert self.current_token[0] == "RPAREN"
@@ -283,16 +275,6 @@ class Parser:
         logging.info("Function Call Node: ", node)
         logging.info("Next Token form func Call Node: ", self.peek())
         return node
-
-    def arg_list(self):
-        """
-        Parses a list of arguments in a function call.
-        Example:
-        arg1, arg2, arg3
-        TODO: Implement the logic to parse comma-separated arguments.
-        """
-        args = []
-        return args
 
     def expect(self, token_type):
         if self.current_token[0] == token_type:

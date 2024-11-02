@@ -13,9 +13,6 @@ def run_test(test_input, expected_output):
     lexer = p0.Lexer(test_input)
     tokens = lexer.tokenize()
 
-    for i in tokens:
-        print(i)
-    print("\n")
     # Initialize the parser and generate the AST
     parser = p0.Parser(tokens)
     ast = parser.parse()
